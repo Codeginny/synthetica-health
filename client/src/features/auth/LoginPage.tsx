@@ -1,6 +1,7 @@
 'use client';
 
 import { useId, useState, type FormEvent } from 'react';
+import Link from 'next/link';
 import { hardNavigate } from '@/lib/browser';
 import { useMutation } from '@tanstack/react-query';
 import { Activity } from 'lucide-react';
@@ -83,6 +84,9 @@ export default function LoginPage({ next, demo }: LoginPageProps) {
             {mutation.isPending ? 'Ingresando…' : 'Ingresar'}
           </Button>
         </form>
+        <p className="mt-6 text-center text-caption text-content-muted">
+          <Link href="/" className="text-accent underline">¿Qué es Synthetica y cómo funciona?</Link>
+        </p>
       </div>
     </main>
   );
