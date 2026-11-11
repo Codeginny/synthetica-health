@@ -2,7 +2,7 @@
 
 **Dashboard SaaS B2B de inteligencia operativa para clínicas** · React 18 · Next.js 14 (SSR, App Router) · TypeScript estricto · Tailwind CSS · SCSS · TanStack Query (React Query) · Zustand · GraphQL · APIs REST · Recharts · Jest · React Testing Library · Playwright · Storybook · Design System · Accesibilidad WCAG 2.1 AA · Node.js · Express · PostgreSQL (Supabase)
 
-![Dashboard en modo claro](docs/screenshots/01-dashboard-claro.png)
+![Dashboard en modo oscuro con anotaciones](docs/case/case-02-dashboard-oscuro.png)
 
 | Problema | Solución | Impacto objetivo |
 |---|---|---|
@@ -41,18 +41,20 @@
 
 ### Plataforma
 
-| Modo claro | Modo oscuro |
+**Un solo set de design tokens para modo claro y oscuro** — contraste WCAG AA en ambos
+![Modo claro y oscuro](docs/case/case-09-paleta-claro-oscuro.png)
+
+| Login | Mobile (modo oscuro) |
 |---|---|
-| ![Dashboard claro](docs/screenshots/01-dashboard-claro.png) | ![Dashboard oscuro](docs/screenshots/02-dashboard-oscuro.png) |
 | ![Login](docs/screenshots/09-login-claro.png) | ![Mobile oscuro](docs/screenshots/10-mobile-oscuro.png) |
 
 ### Detalle con zoom
 
 **KPIs con estados de carga y formato compacto** — React Query + skeletons SCSS
-![KPIs](docs/screenshots/03-zoom-kpis-claro.png)
+![KPIs](docs/case/case-06-kpi-desborde.png)
 
 **Filtros avanzados por rango de fechas, profesional y estado** — sincronizados con la URL y leídos por el servidor (SSR)
-![Filtros](docs/screenshots/04-zoom-filtros-oscuro.png)
+![Filtros](docs/case/case-08-filtros-url.png)
 
 **Visualización de datos con Recharts** — colores tomados de los design tokens
 ![Gráficos](docs/screenshots/05-zoom-graficos-oscuro.png)
@@ -64,20 +66,26 @@
 ![Asistente](docs/screenshots/07-zoom-asistente-oscuro.png)
 
 **Accesibilidad** — foco visible por teclado y error de validación anunciado con `role="alert"`
-![Accesibilidad](docs/screenshots/08-zoom-accesibilidad-claro.png)
+![Accesibilidad](docs/case/case-07-accesibilidad.png)
 
 ### Calidad y documentación
 
 **Storybook** — componentes con controles interactivos y addon de accesibilidad
-![Storybook](docs/screenshots/11-storybook-design-system.png)
+![Storybook](docs/case/case-04-storybook.png)
 
 **Playwright** — flujos críticos E2E
 ![Playwright](docs/screenshots/12-playwright-e2e.png)
+
+**Test E2E del flujo crítico**: login → filtro por rango de fechas → KPIs, gráficos y tabla actualizados (también tras recargar)
+![Test E2E](docs/case/case-05-playwright-e2e.png)
 
 **Jest + React Testing Library** — cobertura
 ![Cobertura](docs/screenshots/13-jest-cobertura.png)
 
 ### Código
+
+**TanStack Query + filtros sincronizados con la URL**
+![TanStack Query](docs/case/case-03-react-query-filtros.png)
 
 | SSR con Next.js | GraphQL |
 |---|---|
@@ -88,6 +96,11 @@
 ---
 
 ## Arquitectura
+
+![Estructura del proyecto](docs/case/case-01-estructura.png)
+
+<details>
+<summary>Árbol completo</summary>
 
 ```
 client/src
@@ -108,6 +121,8 @@ client/src
 client/e2e/              Playwright
 server/                  API Express: routes · services · validators (Zod)
 ```
+
+</details>
 
 ### Flujo SSR
 
