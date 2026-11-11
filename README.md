@@ -8,7 +8,55 @@
 |---|---|---|
 | Las clínicas medianas pierden hasta un **35%** de sus ingresos por ausentismo y mala asignación de turnos | Dashboard en tiempo real, renderizado en servidor, con filtros avanzados, design system propio y asistente analítico en lenguaje natural | **−30%** tiempo administrativo · **+22%** recuperación de pacientes |
 
-**Demo local:** `cd client && npm install && npm run dev` → http://localhost:3000 · usuario `demo@synthetica.health` / `demo1234`
+### 👉 [Ver la demo online](https://client-five-weld-55.vercel.app) · usuario `demo@synthetica.health` / `demo1234`
+
+---
+
+## ¿Qué es y para quién es?
+
+Synthetica Health **no es una herramienta para cargar turnos**: es un tablero para **quien gestiona la clínica**.
+
+| Quién | Para qué la usa |
+|---|---|
+| **Dirección** | Ver dónde se pierden ingresos por ausentismo y decidir con datos, no con intuición. |
+| **Administración** | Controlar facturación estimada, turnos pendientes y rendimiento por profesional sin armar planillas. |
+| **Recepción** | Detectar franjas y especialidades con más cancelaciones para reforzar recordatorios y reasignar turnos. |
+| **Profesionales** | Consultar su propia agenda y sus números del período (filtro por profesional). |
+
+![Página de inicio](docs/case/case-10-inicio.png)
+
+## ¿Cómo funciona en una clínica real?
+
+1. **Los turnos se registran solos.** Cada vez que un paciente reserva, o recepción confirma, cancela o marca un turno como atendido, el sistema de turnos de la clínica (por ejemplo, [TurnosAR](https://github.com/Codeginny/SaaS-TurnosAR)) lo guarda en la base de datos (tabla `turnos` en PostgreSQL / Supabase). Nadie carga datos a mano.
+2. **Synthetica los convierte en indicadores.** Lee esos turnos y calcula en tiempo real ausentismo, turnos completados, facturación estimada y cancelaciones por especialidad y profesional, con filtros por fechas, profesional y estado.
+3. **La clínica decide y pregunta.** La dirección ve dónde actuar y puede preguntar en lenguaje natural: *“¿Cuál es la especialidad con más cancelaciones este mes?”*.
+
+![Cómo funciona](docs/case/case-11-como-funciona.png)
+
+## ¿Cómo la pruebo?
+
+1. Entrá a la **[demo online](https://client-five-weld-55.vercel.app)** con `demo@synthetica.health` / `demo1234` (ya vienen completos).
+2. Explorá con los **datos de ejemplo**: cambiá fechas, profesional y estado; probá el modo oscuro y el asistente.
+3. Probá con **tus propios datos**: tocá **“Importar Excel/CSV”**, descargá la plantilla y subí tus turnos. El archivo se lee en tu navegador: **no se sube a ningún servidor**.
+
+### Columnas del Excel o CSV
+
+| Columna | Ejemplo | ¿Obligatoria? |
+|---|---|---|
+| `profesional` | Dra. Lucía Paz | Sí |
+| `fecha` | `05/11/2026` o `2026-11-05` (también fecha nativa de Excel) | Sí |
+| `estado` | `pendiente` · `confirmado` · `completado` · `cancelado` (acepta “atendido” y “ausente”) | Sí |
+| `hora` | `09:30` | No |
+| `especialidad` | Cardiología | No |
+| `paciente` | Sofía Gómez | No |
+
+Los encabezados pueden ir con o sin acentos (`Médico` también vale como `profesional`). Las filas inválidas se informan con su número y no se importan. Límite: 5 MB / 20.000 turnos. Plantilla: [`client/public/plantilla-turnos.csv`](client/public/plantilla-turnos.csv).
+
+![Importar Excel o CSV](docs/case/case-12-importar.png)
+
+![Dashboard con datos importados](docs/case/case-13-dashboard-importado.png)
+
+> **Con datos reales:** en la versión conectada (`SYNTHETICA_DEMO=false`) los datos salen de la tabla `turnos` de Supabase. Para cargar un histórico, en Supabase: *Table editor → turnos → Insert → Import data from CSV* con las mismas columnas (`paciente_nombre`, `profesional`, `especialidad`, `fecha`, `hora`, `estado`, `precio_consulta`, `tipo_cobertura`).
 
 ---
 
@@ -28,11 +76,12 @@
 | **Dashboards / visualización de datos** | KPIs, gráfico de áreas y de barras con Recharts, tabla de turnos | `client/src/components/ui/TrendChart.tsx`, `SpecialtyChart.tsx` |
 | **Design system / Figma a código** | Tokens + componentes tipados documentados en Storybook | `client/src/components/ui`, `client/.storybook` |
 | **Storybook** | 6 componentes con historias, controles interactivos (args), modo claro/oscuro y addon de accesibilidad | `*.stories.tsx` |
-| **Jest + React Testing Library** | 35 tests unitarios y de integración, 86% de líneas cubiertas | `*.test.ts(x)`, `client/jest.config.mjs` |
-| **Playwright (E2E)** | Login → filtro por fechas → datos actualizados; SSR; cookie httpOnly; rango inválido | `client/e2e` |
+| **Jest + React Testing Library** | 49 tests unitarios y de integración | `*.test.ts(x)`, `client/jest.config.mjs` |
+| **Playwright (E2E)** | Login → filtro por fechas → datos actualizados; SSR; cookie httpOnly; rango inválido; importación de CSV; página de inicio | `client/e2e` |
 | **Accesibilidad (WCAG)** | ARIA, navegación completa por teclado, foco visible, contraste AA medido en ambos temas, `prefers-reduced-motion` | capturas 08 y 10 |
 | **Modo claro / oscuro** | Tokens CSS por tema, sin flash al cargar | `client/src/lib/theme.tsx` |
 | **Seguridad** | JWT en cookie `httpOnly`, BFF, validación Zod, SQL parametrizado, protección de rutas, sin open redirect | `client/src/app/api/session`, `server/` |
+| **Importación de datos** | Excel (.xlsx) y CSV leídos en el navegador, validación por fila, sinónimos y formatos de fecha argentinos | `client/src/features/import` |
 | **Ownership** | Producto definido, diseñado, desarrollado, testeado y documentado de punta a punta | este repositorio |
 
 ---
@@ -109,6 +158,8 @@ client/src
 ├─ middleware.ts         Protege /dashboard por cookie de sesión
 ├─ components/ui/        Design system tipado (+ .stories.tsx, .test.tsx, .module.scss)
 ├─ features/
+│  ├─ landing/           Página de inicio: qué es, para quién, cómo funciona
+│  ├─ import/            Importador Excel/CSV (normalización y validación)
 │  ├─ auth/              Login / logout
 │  ├─ dashboard/         Página, queries (TanStack), api (GraphQL), agregación pura
 │  └─ assistant/         Panel lateral del asistente analítico
