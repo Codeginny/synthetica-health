@@ -31,7 +31,9 @@ if (typeof window !== 'undefined') {
 
 // Stores de Zustand limpios entre tests.
 import { resetAssistantStore } from '@/stores/assistantStore';
+import { resetDatasetStore } from '@/stores/datasetStore';
 afterEach(() => {
   resetAssistantStore();
+  resetDatasetStore();
   if (typeof sessionStorage !== 'undefined') sessionStorage.clear();
 });

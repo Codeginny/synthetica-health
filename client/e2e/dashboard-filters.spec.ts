@@ -91,3 +91,27 @@ test('rango inválido no consulta y lo informa', async ({ page }) => {
   await expect(page.getByRole('alert').filter({ hasText: 'anterior o igual' })).toBeVisible();
   expect(calls).toHaveLength(0);
 });
+
+test('inicio público explica la plataforma y lleva a la demo', async ({ page }) => {
+  await page.goto('/');
+  await expect(page.getByRole('heading', { name: '¿Para quién es?' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: '¿Cómo funciona en una clínica real?' })).toBeVisible();
+  await page.getByRole('link', { name: 'Probar la demo' }).first().click();
+  await expect(page).toHaveURL(/\/login/);
+});
+
+test('importar la plantilla CSV muestra el dashboard con esos datos', async ({ page }) => {
+  await login(page);
+  await page.getByRole('button', { name: 'Importar Excel/CSV' }).click();
+  await page.locator('input[type="file"]').setInputFiles('public/plantilla-turnos.csv');
+  await expect(page.getByText(/turnos listos de/)).toContainText('6 turnos listos de 6 filas');
+  await page.getByRole('button', { name: /Ver mi dashboard/ }).click();
+
+  await expect(page.getByRole('status').filter({ hasText: 'plantilla-turnos.csv' })).toBeVisible();
+  await expect(page).toHaveURL(/from=2026-11-03&to=2026-11-05/);
+  await expect(page.getByTestId('metric-Turnos')).toHaveText('6');
+  await expect(page.getByTestId('metric-Ausentismo')).toHaveText('33.3%');
+
+  await page.getByRole('button', { name: 'Datos de ejemplo' }).click();
+  await expect(page.getByRole('status').filter({ hasText: 'datos de ejemplo' })).toBeVisible();
+});
