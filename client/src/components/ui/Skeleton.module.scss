@@ -1,0 +1,12 @@
+@use '../../styles/mixins' as *;
+
+.skeleton {
+  display: block;
+  border-radius: rem(10);
+  @include shimmer('brand-100', 'brand-50');
+
+  :global(.dark) & {
+    @include shimmer('brand-900', 'brand-800');
+    opacity: 0.6;
+  }
+}

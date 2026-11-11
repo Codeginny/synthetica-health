@@ -1,7 +1,7 @@
 'use client';
 
 import { useId, useState, type FormEvent } from 'react';
-import { useRouter } from 'next/navigation';
+import { hardNavigate } from '@/lib/browser';
 import { useMutation } from '@tanstack/react-query';
 import { Activity } from 'lucide-react';
 import { Button } from '@/components/ui';
@@ -19,16 +19,12 @@ export interface LoginPageProps {
 
 export default function LoginPage({ next, demo }: LoginPageProps) {
   const id = useId();
-  const router = useRouter();
   const [email, setEmail] = useState(demo?.email ?? '');
   const [password, setPassword] = useState(demo?.password ?? '');
 
   const mutation = useMutation({
     mutationFn: () => login(email, password),
-    onSuccess: () => {
-      router.replace(next);
-      router.refresh();
-    },
+    onSuccess: () => hardNavigate(next),
   });
 
   const onSubmit = (e: FormEvent) => {

@@ -8,6 +8,8 @@ const config: StorybookConfig = {
   docs: { autodocs: 'tag' },
   viteFinal: async (config) => ({
     ...config,
+    // tsconfig usa jsx "preserve" (Next); en Storybook/Vite se fuerza el runtime automático.
+    esbuild: { ...config.esbuild, jsx: 'automatic' },
     resolve: { ...config.resolve, alias: { ...config.resolve?.alias, '@': fileURLToPath(new URL('../src', import.meta.url)) } },
   }),
 };

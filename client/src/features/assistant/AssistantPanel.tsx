@@ -1,9 +1,10 @@
 'use client';
 
 import { useEffect, useId, useRef, useState, type FormEvent } from 'react';
-import { Send, Sparkles, X } from 'lucide-react';
+import { Send, Sparkles, Trash2, X } from 'lucide-react';
 import { Button, cn, ErrorState } from '@/components/ui';
 import { useAssistantQuery } from '@/features/dashboard/queries';
+import { useAssistantStore } from '@/stores/assistantStore';
 import type { AssistantAnswer, DashboardFilters } from '@/types/analytics';
 
 const SUGGESTIONS = [
@@ -12,25 +13,24 @@ const SUGGESTIONS = [
   '¿Qué profesional tiene más turnos pendientes?',
 ];
 
-interface Exchange {
-  id: number;
-  question: string;
-  answer: AssistantAnswer;
-}
-
 export interface AssistantPanelProps {
   filters: DashboardFilters;
   defaultOpen?: boolean;
 }
 
 export function AssistantPanel({ filters, defaultOpen = false }: AssistantPanelProps) {
-  const [open, setOpen] = useState(defaultOpen);
+  const { open, setOpen, history, addExchange, clear } = useAssistantStore();
   const [question, setQuestion] = useState('');
-  const [history, setHistory] = useState<Exchange[]>([]);
   const mutation = useAssistantQuery(filters);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const triggerRef = useRef<HTMLButtonElement>(null);
   const titleId = useId();
+
+  // Rehidrata el historial persistido sólo en el cliente (evita mismatch de SSR).
+  useEffect(() => {
+    void useAssistantStore.persist.rehydrate();
+    if (defaultOpen) setOpen(true);
+  }, [defaultOpen, setOpen]);
 
   useEffect(() => {
     if (!open) return;
@@ -50,7 +50,7 @@ export function AssistantPanel({ filters, defaultOpen = false }: AssistantPanelP
     if (!text || mutation.isPending) return;
     mutation.mutate(text, {
       onSuccess: (answer) => {
-        setHistory((h) => [...h, { id: Date.now(), question: text, answer }]);
+        addExchange(text, answer);
         setQuestion('');
       },
     });
@@ -84,9 +84,16 @@ export function AssistantPanel({ filters, defaultOpen = false }: AssistantPanelP
             <h2 id={titleId} className="flex items-center gap-2 text-title text-content">
               <Sparkles aria-hidden="true" className="h-5 w-5 text-accent" /> Asistente analítico
             </h2>
-            <Button variant="ghost" size="sm" onClick={close} aria-label="Cerrar asistente">
-              <X aria-hidden="true" className="h-4 w-4" />
-            </Button>
+            <div className="flex gap-1">
+              {history.length > 0 && (
+                <Button variant="ghost" size="sm" onClick={clear} aria-label="Borrar conversación">
+                  <Trash2 aria-hidden="true" className="h-4 w-4" />
+                </Button>
+              )}
+              <Button variant="ghost" size="sm" onClick={close} aria-label="Cerrar asistente">
+                <X aria-hidden="true" className="h-4 w-4" />
+              </Button>
+            </div>
           </header>
 
           <div className="flex-1 space-y-4 overflow-y-auto p-gutter" aria-live="polite" aria-busy={mutation.isPending}>

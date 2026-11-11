@@ -1,17 +1,34 @@
-import { getJson, postJson } from '@/lib/http';
+import { postJson } from '@/lib/http';
+import { gql } from '@/lib/graphql';
 import type { AssistantAnswer, DashboardData, DashboardFilters } from '@/types/analytics';
 
-const toParams = (f: DashboardFilters): Record<string, string> => ({
-  from: f.from,
-  to: f.to,
-  ...(f.doctor ? { doctor: f.doctor } : {}),
-  ...(f.status ? { status: f.status } : {}),
-});
+const DASHBOARD_QUERY = /* GraphQL */ `
+  query Dashboard($filters: DashboardFiltersInput!) {
+    dashboard(filters: $filters) {
+      kpis { total pendientes confirmados completados cancelados tasaAusentismo ingresos }
+      serie { fecha total completados cancelados }
+      porEspecialidad { especialidad total cancelados }
+      turnos { id paciente profesional especialidad fecha hora estado }
+    }
+  }
+`;
+
+const DOCTORS_QUERY = /* GraphQL */ `
+  query Doctors {
+    doctors
+  }
+`;
 
 export const dashboardApi = {
-  getDashboard: (filters: DashboardFilters, signal?: AbortSignal) =>
-    getJson<DashboardData>('/bff/analytics/dashboard', toParams(filters), signal),
-  getDoctors: (signal?: AbortSignal) => getJson<string[]>('/bff/analytics/doctors', undefined, signal),
+  /** GraphQL: la UI pide exactamente los campos que renderiza. */
+  async getDashboard(filters: DashboardFilters, signal?: AbortSignal): Promise<DashboardData> {
+    const { dashboard } = await gql<{ dashboard: Omit<DashboardData, 'filters'> }>(DASHBOARD_QUERY, { filters }, signal);
+    return { ...dashboard, filters };
+  },
+  async getDoctors(signal?: AbortSignal): Promise<string[]> {
+    return (await gql<{ doctors: string[] }>(DOCTORS_QUERY, undefined, signal)).doctors;
+  },
+  /** REST: el asistente es una operación de comando, no de lectura de grafo. */
   askAssistant: (question: string, filters: DashboardFilters, signal?: AbortSignal) =>
     postJson<AssistantAnswer>('/bff/assistant/query', { question, filters }, signal),
 };

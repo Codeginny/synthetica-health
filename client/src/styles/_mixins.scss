@@ -1,0 +1,26 @@
+// Mixins compartidos del design system (consumen los tokens CSS de index.css).
+
+@use 'sass:math';
+
+@function token($name, $alpha: 1) {
+  @return rgb(var(--#{$name}) / $alpha);
+}
+
+@mixin shimmer($base: 'brand-100', $highlight: 'brand-50', $duration: 1.4s) {
+  background: linear-gradient(90deg, token($base) 0%, token($highlight) 50%, token($base) 100%);
+  background-size: 200% 100%;
+  animation: shimmer $duration ease-in-out infinite;
+
+  @keyframes shimmer {
+    from { background-position: 100% 0; }
+    to { background-position: -100% 0; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    animation: none;
+  }
+}
+
+@function rem($px) {
+  @return math.div($px, 16) * 1rem;
+}
