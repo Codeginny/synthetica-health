@@ -1,3 +1,5 @@
+'use client';
+
 import { Area, AreaChart, CartesianGrid, Legend, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 import type { DailyPoint } from '@/types/analytics';
 import { formatShortDate } from '@/lib/dates';

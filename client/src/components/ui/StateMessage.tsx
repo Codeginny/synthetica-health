@@ -1,3 +1,5 @@
+'use client';
+
 import { AlertTriangle, Inbox } from 'lucide-react';
 import { Button } from './Button';
 

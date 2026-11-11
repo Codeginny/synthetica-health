@@ -1,3 +1,5 @@
+'use client';
+
 import { Bar, BarChart, CartesianGrid, Legend, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 import type { SpecialtyPoint } from '@/types/analytics';
 import { Card } from './Card';

@@ -1,27 +1,33 @@
+'use client';
+
 import { useId, useState, type FormEvent } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useRouter } from 'next/navigation';
 import { useMutation } from '@tanstack/react-query';
 import { Activity } from 'lucide-react';
 import { Button } from '@/components/ui';
-import { session } from '@/lib/session';
 import { login } from './api';
 
 const field =
   'h-11 w-full rounded-control border border-line-strong bg-surface px-3 text-body text-content placeholder:text-content-subtle focus-visible:shadow-focus focus-visible:outline-none';
 
-export default function LoginPage() {
+export interface LoginPageProps {
+  /** Ruta interna a la que volver tras el login. */
+  next: string;
+  /** Credenciales visibles cuando la app corre en modo demo. */
+  demo: { email: string; password: string } | null;
+}
+
+export default function LoginPage({ next, demo }: LoginPageProps) {
   const id = useId();
-  const navigate = useNavigate();
-  const location = useLocation();
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const router = useRouter();
+  const [email, setEmail] = useState(demo?.email ?? '');
+  const [password, setPassword] = useState(demo?.password ?? '');
 
   const mutation = useMutation({
     mutationFn: () => login(email, password),
-    onSuccess: ({ token, profesional }) => {
-      session.save(token, profesional);
-      const from = (location.state as { from?: string } | null)?.from;
-      navigate(from ?? '/dashboard', { replace: true });
+    onSuccess: () => {
+      router.replace(next);
+      router.refresh();
     },
   });
 
@@ -42,6 +48,12 @@ export default function LoginPage() {
             <p className="text-caption text-content-muted">Ingresá a tu panel operativo</p>
           </div>
         </div>
+
+        {demo && (
+          <p className="mb-4 rounded-control border border-brand-200 bg-brand-50 p-3 text-caption text-brand-900 dark:border-brand-800 dark:bg-brand-900/30 dark:text-brand-100">
+            Modo demo · <strong>{demo.email}</strong> / <strong>{demo.password}</strong>
+          </p>
+        )}
 
         <form onSubmit={onSubmit} className="space-y-4" noValidate>
           <div>

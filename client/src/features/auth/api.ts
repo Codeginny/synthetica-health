@@ -1,17 +1,4 @@
-import { postJson } from '@/lib/http';
-import type { SessionUser } from '@/lib/session';
+import { api, postJson } from '@/lib/http';
 
-export interface LoginResponse {
-  token: string;
-  profesional: SessionUser;
-}
-
-const USE_MOCKS = import.meta.env.VITE_USE_MOCKS === 'true';
-
-export const login = (email: string, password: string): Promise<LoginResponse> => {
-  // Modo demo: cualquier credencial entra, sin backend.
-  if (USE_MOCKS) {
-    return Promise.resolve({ token: 'demo', profesional: { id: 0, nombre: 'Usuario demo', email, especialidad: 'Clínica' } });
-  }
-  return postJson<LoginResponse>('/login', { email, password });
-};
+export const login = (email: string, password: string) => postJson<{ nombre: string }>('/session', { email, password });
+export const logout = () => api.delete('/session');

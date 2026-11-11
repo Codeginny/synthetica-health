@@ -1,6 +1,5 @@
 import type { Decorator, Preview } from '@storybook/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { MemoryRouter } from 'react-router-dom';
 import { useEffect } from 'react';
 import '../src/index.css';
 
@@ -10,7 +9,7 @@ const withTheme: Decorator = (Story, ctx) => {
     document.documentElement.classList.toggle('dark', dark);
   }, [dark]);
   return (
-    <div className="min-h-screen bg-surface-muted p-6 font-sans text-content">
+    <div className="min-h-screen bg-surface-muted p-6 font-sans text-content" style={{ fontFamily: 'Inter, system-ui, sans-serif' }}>
       <Story />
     </div>
   );
@@ -18,9 +17,7 @@ const withTheme: Decorator = (Story, ctx) => {
 
 const withProviders: Decorator = (Story) => (
   <QueryClientProvider client={new QueryClient({ defaultOptions: { queries: { retry: false } } })}>
-    <MemoryRouter>
-      <Story />
-    </MemoryRouter>
+    <Story />
   </QueryClientProvider>
 );
 

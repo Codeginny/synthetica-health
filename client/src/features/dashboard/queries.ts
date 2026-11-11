@@ -2,12 +2,10 @@ import { keepPreviousData, useMutation, useQuery } from '@tanstack/react-query';
 import { dashboardApi } from './api';
 import { isValidRange } from '@/lib/dates';
 import type { DashboardFilters } from '@/types/analytics';
+import { dashboardKeys } from './keys';
 
-export const dashboardKeys = {
-  all: ['dashboard'] as const,
-  data: (f: DashboardFilters) => [...dashboardKeys.all, 'data', f] as const,
-  doctors: () => [...dashboardKeys.all, 'doctors'] as const,
-};
+export { dashboardKeys };
+
 
 export function useDashboardData(filters: DashboardFilters) {
   return useQuery({

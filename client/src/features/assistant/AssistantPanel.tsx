@@ -1,3 +1,5 @@
+'use client';
+
 import { useEffect, useId, useRef, useState, type FormEvent } from 'react';
 import { Send, Sparkles, X } from 'lucide-react';
 import { Button, cn, ErrorState } from '@/components/ui';

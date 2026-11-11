@@ -1,3 +1,5 @@
+'use client';
+
 import { useId } from 'react';
 import { RotateCcw } from 'lucide-react';
 import { APPOINTMENT_STATUSES, type AppointmentStatus, type DashboardFilters } from '@/types/analytics';

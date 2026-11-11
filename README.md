@@ -8,20 +8,23 @@ SaaS B2B de inteligencia operativa para clínicas: dashboard de agenda y ausenti
 
 ## Stack
 
-React 18 · Vite 5 · TypeScript strict · Tailwind (tokens CSS, claro/oscuro) · TanStack Query 5 · Recharts · Vitest + Testing Library · Playwright · Storybook 8 (+a11y) · Node/Express · PostgreSQL (Supabase).
+Next.js 14 (App Router, SSR) · React 18 · TypeScript strict · Tailwind (tokens CSS, claro/oscuro) · TanStack Query 5 · Recharts · Vitest + Testing Library · Playwright · Storybook 8 (+a11y) · Node/Express · PostgreSQL (Supabase).
 
 ## Estructura
 
 ```
 client/src
+├─ app/                  App Router: /login, /dashboard (Server Component), api/session, api/bff
+├─ server/               Sólo servidor: config, acceso a la API (server-only)
+├─ middleware.ts         Protege /dashboard por cookie de sesión
 ├─ components/ui/        Design system tipado (+ .stories.tsx, .test.tsx)
 ├─ features/
-│  ├─ auth/              Login, RequireAuth
+│  ├─ auth/              Login / logout
 │  ├─ dashboard/         Página, queries (TanStack), api, agregación pura
 │  └─ assistant/         Panel lateral del asistente analítico
 ├─ hooks/                useDashboardFilters (estado en URL)
-├─ lib/                  http (axios + ApiError), session, theme, queryClient
-├─ mocks/                Dataset determinista (demo, Storybook, E2E)
+├─ lib/                  http (axios + ApiError), filters, theme, queryClient
+├─ mocks/                Dataset determinista (modo demo, Storybook, E2E)
 └─ types/analytics.ts    Contratos compartidos con la API
 client/e2e/              Playwright
 server/
@@ -30,9 +33,24 @@ server/
 └─ validators/           Zod
 ```
 
+## Flujo SSR
+
+```
+Navegador ──▶ middleware (cookie?) ──▶ /dashboard (Server Component)
+                                         ├─ parseFilters(searchParams)
+                                         ├─ prefetch TanStack Query ─▶ server/backend ─▶ API Express / modo demo
+                                         └─ HydrationBoundary ─▶ HTML con KPIs ya renderizados
+Filtros (cliente) ──▶ history.replaceState ──▶ useQuery ──▶ /api/bff/* ──▶ API (JWT desde cookie httpOnly)
+```
+
+- Primer paint con datos reales: sin skeletons ni waterfall; los skeletons quedan para cambios de filtro.
+- **BFF**: el navegador nunca ve el JWT (cookie `httpOnly`, `sameSite=lax`, `secure` en prod). Next lo agrega hacia la API.
+- `redirect` post-login sólo a rutas internas (sin open redirect).
+- Tema sin flash: script inline en `<head>` aplica `dark` antes del primer paint.
+
 ## Contratos API
 
-Todas bajo `/api`, JSON. Rutas de datos requieren `Authorization: Bearer <jwt>`.
+API Express bajo `/api`, JSON. Rutas de datos requieren `Authorization: Bearer <jwt>` (lo inyecta el BFF de Next).
 
 | Método | Ruta | Entrada | Salida |
 |---|---|---|---|
@@ -57,14 +75,13 @@ Tipos en `client/src/types/analytics.ts`. Errores: `{ error, details? }` con 400
 
 ```bash
 # client
-npm run dev            # modo demo: datos y asistente simulados, sin backend ni claves
+npm run dev            # modo demo (por defecto): demo@synthetica.health / demo1234
 npm run dev:api        # contra la API real (server en :3001)
 npm run typecheck
-npm test               # Vitest
-npm run test:e2e       # Playwright (levanta Vite y mockea la API)
+npm test               # Vitest + Testing Library
+npm run test:e2e       # Playwright (levanta Next en modo demo)
 npm run storybook
-npm run build          # build demo (deploy estático)
-npm run build:api      # build contra la API real
+npm run build && npm start
 
 # server
 npm run dev
@@ -72,4 +89,5 @@ npm run dev
 
 ## Variables
 
-`server/.env`: `DATABASE_URL`, `JWT_SECRET`, `CLIENT_ORIGIN`, `PORT` y la clave del asistente. Ver `server/.env.example`.
+- `client/.env`: `SYNTHETICA_DEMO` (`true` por defecto), `SYNTHETICA_API_URL`.
+- `server/.env`: `DATABASE_URL`, `JWT_SECRET`, `CLIENT_ORIGIN`, `PORT` y la clave del asistente. Ver `server/.env.example`.

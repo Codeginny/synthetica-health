@@ -1,4 +1,7 @@
-import { CalendarCheck, CalendarClock, CircleDollarSign, UserX } from 'lucide-react';
+'use client';
+
+import { useRouter } from 'next/navigation';
+import { CalendarCheck, CalendarClock, CircleDollarSign, LogOut, UserX } from 'lucide-react';
 import {
   AppointmentsTable,
   ErrorState,
@@ -10,6 +13,8 @@ import {
 import { AssistantPanel } from '@/features/assistant/AssistantPanel';
 import { useDashboardFilters } from '@/hooks/useDashboardFilters';
 import { formatCurrency } from '@/lib/dates';
+import { Button } from '@/components/ui';
+import { logout } from '@/features/auth/api';
 import { ThemeToggle } from './ThemeToggle';
 import { useDashboardData, useDoctors } from './queries';
 
@@ -19,6 +24,12 @@ export default function OperationsDashboard() {
   const doctors = useDoctors();
   const loading = isPending;
   const kpis = data?.kpis;
+  const router = useRouter();
+
+  const onLogout = async () => {
+    await logout();
+    router.replace('/login');
+  };
 
   return (
     <div className="min-h-screen bg-surface-muted font-sans text-content">
@@ -29,7 +40,12 @@ export default function OperationsDashboard() {
             <h1 className="text-display text-content">Inteligencia operativa</h1>
             <p className="text-body text-content-muted">Agenda, ausentismo y rendimiento de la clínica en tiempo real.</p>
           </div>
-          <ThemeToggle />
+          <div className="flex gap-2">
+            <ThemeToggle />
+            <Button variant="ghost" size="sm" onClick={() => void onLogout()}>
+              <LogOut aria-hidden="true" className="h-4 w-4" /> Salir
+            </Button>
+          </div>
         </header>
 
         <FilterBar value={filters} doctors={doctors.data ?? []} onChange={update} onReset={reset} />

@@ -1,5 +1,4 @@
 import axios, { isAxiosError, type AxiosRequestConfig } from 'axios';
-import { session } from './session';
 
 export class ApiError extends Error {
   constructor(
@@ -11,28 +10,16 @@ export class ApiError extends Error {
   }
 }
 
-export const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL ?? '/api',
-  headers: { 'Content-Type': 'application/json' },
-  timeout: 30_000,
-});
-
-api.interceptors.request.use((config) => {
-  const token = session.token;
-  if (token) config.headers.Authorization = `Bearer ${token}`;
-  return config;
-});
+/** Cliente del navegador: habla sólo con Next (BFF). La sesión viaja en cookie httpOnly. */
+export const api = axios.create({ baseURL: '/api', headers: { 'Content-Type': 'application/json' }, timeout: 30_000 });
 
 api.interceptors.response.use(undefined, (err: unknown) => {
-  // Token vencido fuera del login: se descarta la sesión y se vuelve al login.
-  if (isAxiosError(err) && err.response?.status === 401 && !err.config?.url?.includes('/login')) {
-    session.clear();
-    window.location.assign('/login');
+  if (isAxiosError(err) && err.response?.status === 401 && !err.config?.url?.includes('/session')) {
+    window.location.assign(`/login?next=${encodeURIComponent(window.location.pathname + window.location.search)}`);
   }
   return Promise.reject(err);
 });
 
-/** Normaliza errores de axios a `ApiError` para que la UI no dependa del transporte. */
 export function toApiError(err: unknown): ApiError {
   if (isAxiosError<{ error?: string }>(err)) {
     const status = err.response?.status ?? null;

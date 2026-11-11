@@ -2,7 +2,7 @@
 const token = (name) => `rgb(var(--${name}) / <alpha-value>)`;
 
 export default {
-  content: ['./index.html', './src/**/*.{js,jsx,ts,tsx}', './.storybook/**/*.{ts,tsx}'],
+  content: ['./src/**/*.{js,jsx,ts,tsx}', './.storybook/**/*.{ts,tsx}'],
   darkMode: 'class',
   theme: {
     extend: {
@@ -28,7 +28,7 @@ export default {
         chart: { 1: token('chart-1'), 2: token('chart-2'), 3: token('chart-3'), 4: token('chart-4') },
       },
       fontFamily: {
-        sans: ['Inter', 'system-ui', 'sans-serif'],
+        sans: ['var(--font-inter)', 'system-ui', 'sans-serif'],
         mono: ['"JetBrains Mono"', 'ui-monospace', 'monospace'],
       },
       fontSize: {
