@@ -1,0 +1,16 @@
+node_modules/
+dist/
+*.log
+
+.env
+.env.*
+!.env.example
+
+client/test-results/
+client/playwright-report/
+client/storybook-static/
+coverage/
+
+.DS_Store
+.idea/
+.vscode/
