@@ -1,7 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { act, renderHook } from '@testing-library/react';
-import type { ReactNode } from 'react';
-import { MemoryRouter } from 'react-router-dom';
+import { setTestUrl } from '@/test/navigation';
 import { defaultFilters, parseFilters, useDashboardFilters } from './useDashboardFilters';
 
 const NOW = new Date('2026-11-10T12:00:00Z');
@@ -23,12 +22,9 @@ describe('parseFilters', () => {
 });
 
 describe('useDashboardFilters', () => {
-  const wrapper = ({ children }: { children: ReactNode }) => (
-    <MemoryRouter initialEntries={['/dashboard?from=2026-11-01&to=2026-11-07']}>{children}</MemoryRouter>
-  );
-
   it('aplica patches parciales y resetea', () => {
-    const { result } = renderHook(() => useDashboardFilters(), { wrapper });
+    setTestUrl('/dashboard?from=2026-11-01&to=2026-11-07');
+    const { result } = renderHook(() => useDashboardFilters());
     act(() => result.current.update({ status: 'pendiente' }));
     expect(result.current.filters).toMatchObject({ from: '2026-11-01', to: '2026-11-07', status: 'pendiente' });
 
