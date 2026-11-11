@@ -1,4 +1,3 @@
-import { describe, expect, it } from 'vitest';
 import { applyFilters, buildDashboard, CONSULTATION_PRICE } from './aggregate';
 import type { AppointmentRow, DashboardFilters } from '@/types/analytics';
 

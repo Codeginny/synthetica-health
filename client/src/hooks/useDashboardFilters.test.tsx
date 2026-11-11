@@ -1,6 +1,5 @@
-import { describe, expect, it } from 'vitest';
 import { act, renderHook } from '@testing-library/react';
-import { setTestUrl } from '@/test/navigation';
+import { setTestUrl } from '@/test/next-navigation';
 import { defaultFilters, parseFilters, useDashboardFilters } from './useDashboardFilters';
 
 const NOW = new Date('2026-11-10T12:00:00Z');

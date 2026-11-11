@@ -20,6 +20,7 @@ async function login(page: Page) {
   await page.getByLabel('Contraseña').fill(DEMO.password);
   await page.getByRole('button', { name: 'Ingresar' }).click();
   await expect(page).toHaveURL(/\/dashboard/);
+  await page.waitForLoadState('networkidle'); // dashboard hidratado antes de interactuar
 }
 
 test('login → filtro por rango de fechas → KPIs, gráficos y tabla se actualizan', async ({ page }) => {
@@ -31,9 +32,11 @@ test('login → filtro por rango de fechas → KPIs, gráficos y tabla se actual
   await expect(totalMetric).toHaveText(String(initial.kpis.total));
 
   const from = isoDaysAgo(6);
-  const bff = page.waitForResponse((r) => r.url().includes('/api/bff/analytics/dashboard') && r.url().includes(`from=${from}`));
+  const gqlCall = page.waitForResponse(
+    (r) => r.url().endsWith('/api/graphql') && (r.request().postData() ?? '').includes(`"from":"${from}"`),
+  );
   await page.getByLabel('Desde').fill(from);
-  expect((await bff).status()).toBe(200);
+  expect((await gqlCall).status()).toBe(200);
 
   const expected = buildDashboard(ROWS, { from, to: isoDaysAgo(0), doctor: null, status: null });
   expect(expected.kpis.total).toBeLessThan(initial.kpis.total);
@@ -69,21 +72,21 @@ test('credenciales inválidas muestran error accesible', async ({ page }) => {
   await expect(page.getByRole('alert').filter({ hasText: 'Credenciales' })).toHaveText('Credenciales inválidas');
 });
 
-test('la cookie de sesión es httpOnly y el BFF rechaza sin sesión', async ({ page, context }) => {
+test('la cookie de sesión es httpOnly y BFF REST/GraphQL rechazan sin sesión', async ({ page, context }) => {
   await login(page);
   const cookie = (await context.cookies()).find((c) => c.name === 'synthetica_session');
   expect(cookie?.httpOnly).toBe(true);
   expect(await page.evaluate(() => document.cookie)).not.toContain('synthetica_session');
 
   await context.clearCookies();
-  const res = await page.request.get(`/api/bff/analytics/doctors`);
-  expect(res.status()).toBe(401);
+  expect((await page.request.get(`/api/bff/analytics/doctors`)).status()).toBe(401);
+  expect((await page.request.post(`/api/graphql`, { data: { query: '{ doctors }' } })).status()).toBe(401);
 });
 
 test('rango inválido no consulta y lo informa', async ({ page }) => {
   await login(page);
   const calls: string[] = [];
-  page.on('request', (r) => r.url().includes('/api/bff/analytics/dashboard') && calls.push(r.url()));
+  page.on('request', (r) => r.url().endsWith('/api/graphql') && (r.postData() ?? '').includes('query Dashboard') && calls.push(r.url()));
   await page.goto(`/dashboard?from=${isoDaysAgo(0)}&to=${isoDaysAgo(5)}`);
   await expect(page.getByRole('alert').filter({ hasText: 'anterior o igual' })).toBeVisible();
   expect(calls).toHaveLength(0);

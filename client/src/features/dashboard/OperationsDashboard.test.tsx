@@ -1,4 +1,3 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import OperationsDashboard from './OperationsDashboard';
@@ -13,12 +12,12 @@ const ROUTE = '/dashboard?from=2026-11-01&to=2026-11-10';
 
 describe('OperationsDashboard', () => {
   beforeEach(() => {
-    vi.restoreAllMocks();
-    vi.spyOn(dashboardApi, 'getDoctors').mockResolvedValue(MOCK_DOCTORS);
+    jest.restoreAllMocks();
+    jest.spyOn(dashboardApi, 'getDoctors').mockResolvedValue(MOCK_DOCTORS);
   });
 
   it('muestra skeletons y luego KPIs', async () => {
-    vi.spyOn(dashboardApi, 'getDashboard').mockImplementation(async (f) => buildDashboard(ROWS, f));
+    jest.spyOn(dashboardApi, 'getDashboard').mockImplementation(async (f) => buildDashboard(ROWS, f));
     renderWithProviders(<OperationsDashboard />, { route: ROUTE });
 
     expect(screen.getAllByTestId('skeleton').length).toBeGreaterThan(0);
@@ -27,7 +26,7 @@ describe('OperationsDashboard', () => {
   });
 
   it('refetchea con el nuevo filtro', async () => {
-    const spy = vi.spyOn(dashboardApi, 'getDashboard').mockImplementation(async (f) => buildDashboard(ROWS, f));
+    const spy = jest.spyOn(dashboardApi, 'getDashboard').mockImplementation(async (f) => buildDashboard(ROWS, f));
     renderWithProviders(<OperationsDashboard />, { route: ROUTE });
     await screen.findByTestId('metric-Turnos');
 
@@ -38,7 +37,7 @@ describe('OperationsDashboard', () => {
   });
 
   it('muestra error con reintento', async () => {
-    const spy = vi.spyOn(dashboardApi, 'getDashboard').mockRejectedValueOnce(new ApiError('Error 500', 500));
+    const spy = jest.spyOn(dashboardApi, 'getDashboard').mockRejectedValueOnce(new ApiError('Error 500', 500));
     renderWithProviders(<OperationsDashboard />, { route: ROUTE });
 
     expect(await screen.findByRole('alert')).toHaveTextContent('Error 500');

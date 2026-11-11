@@ -5,6 +5,8 @@ export default defineConfig({
   timeout: 60_000,
   expect: { timeout: 15_000 },
   fullyParallel: true,
+  // `next dev` compila on-demand: pocos workers evitan timeouts por compilación concurrente.
+  workers: process.env.CI ? 1 : 2,
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 0,
   reporter: process.env.CI ? 'github' : 'list',
@@ -16,7 +18,7 @@ export default defineConfig({
   webServer: {
     command: 'npx next dev -p 4173',
     url: 'http://localhost:4173/login',
-    env: { SYNTHETICA_DEMO: 'true' },
+    env: { SYNTHETICA_DEMO: 'true', NEXT_DIST_DIR: '.next-e2e' },
     timeout: 120_000,
     reuseExistingServer: !process.env.CI,
   },
