@@ -1,0 +1,49 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ── Synthetica design tokens (RGB triplets para soportar /alpha) ── */
+@layer base {
+  :root {
+    --brand-50: 250 245 255;  --brand-100: 243 232 255; --brand-200: 233 213 255;
+    --brand-300: 216 180 254; --brand-400: 192 132 252; --brand-500: 168 85 247;
+    --brand-600: 139 92 246;  --brand-700: 109 40 217;  --brand-800: 91 33 182;
+    --brand-900: 76 29 149;   --brand-950: 46 16 101;
+
+    --surface: 255 255 255;  --surface-muted: 248 245 252; --surface-raised: 255 255 255;
+    --content: 30 16 51;     --content-muted: 84 70 110;   --content-subtle: 117 104 140;
+    --content-inverse: 255 255 255;
+    --line: 233 225 243;     --line-strong: 206 192 227;
+    --accent: 109 40 217;    --accent-fg: 255 255 255;
+    --shadow: 46 16 101;
+
+    --status-pending: 168 85 247;  --status-confirmed: 109 40 217;
+    --status-completed: 76 29 149; --status-cancelled: 190 24 93;
+    --chart-1: 109 40 217; --chart-2: 192 132 252; --chart-3: 76 29 149; --chart-4: 190 24 93;
+  }
+
+  .dark {
+    --surface: 20 12 33;     --surface-muted: 14 8 24;     --surface-raised: 31 20 50;
+    --content: 245 240 252;  --content-muted: 200 188 222; --content-subtle: 163 148 190;
+    --content-inverse: 20 12 33;
+    --line: 52 38 77;        --line-strong: 82 64 115;
+    --accent: 192 132 252;   --accent-fg: 20 12 33;
+    --shadow: 0 0 0;
+
+    --status-pending: 216 180 254; --status-confirmed: 192 132 252;
+    --status-completed: 233 213 255; --status-cancelled: 244 114 182;
+    --chart-1: 192 132 252; --chart-2: 139 92 246; --chart-3: 233 213 255; --chart-4: 244 114 182;
+  }
+
+  :focus-visible { outline: 2px solid rgb(var(--brand-500)); outline-offset: 2px; }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+  }
+}
+
+@layer base {
+  body {
+    @apply bg-surface-muted font-sans text-content antialiased;
+  }
+}
