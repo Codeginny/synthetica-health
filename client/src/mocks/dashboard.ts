@@ -57,9 +57,8 @@ export function mockDashboard(filters: DashboardFilters, anchor = new Date()): D
   return buildDashboard(generateAppointments(anchor), filters);
 }
 
-/** Respuesta determinista del asistente para modo demo (sin API key). */
-export function mockAssistant(filters: DashboardFilters): AssistantAnswer {
-  const { kpis, porEspecialidad } = mockDashboard(filters);
+/** Respuesta estructurada calculada localmente (modo demo o datos importados). */
+export function answerFromDashboard({ filters, kpis, porEspecialidad }: DashboardData): AssistantAnswer {
   const top = [...porEspecialidad].sort((a, b) => b.cancelados - a.cancelados)[0];
   return {
     summary: top
@@ -76,3 +75,6 @@ export function mockAssistant(filters: DashboardFilters): AssistantAnswer {
     },
   };
 }
+
+/** Respuesta determinista del asistente para modo demo (sin clave del asistente). */
+export const mockAssistant = (filters: DashboardFilters): AssistantAnswer => answerFromDashboard(mockDashboard(filters));

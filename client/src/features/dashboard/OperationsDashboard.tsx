@@ -1,5 +1,7 @@
 'use client';
 
+import { useCallback, useEffect, useState } from 'react';
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { CalendarCheck, CalendarClock, CircleDollarSign, LogOut, UserX } from 'lucide-react';
 import {
@@ -15,6 +17,9 @@ import { useDashboardFilters } from '@/hooks/useDashboardFilters';
 import { formatCurrency } from '@/lib/dates';
 import { Button } from '@/components/ui';
 import { logout } from '@/features/auth/api';
+import { ImportDialog } from '@/features/import/ImportDialog';
+import { DataSourceBanner } from '@/features/import/DataSourceBanner';
+import { useDatasetStore } from '@/stores/datasetStore';
 import { ThemeToggle } from './ThemeToggle';
 import { useDashboardData, useDoctors } from './queries';
 
@@ -25,6 +30,19 @@ export default function OperationsDashboard() {
   const loading = isPending;
   const kpis = data?.kpis;
   const router = useRouter();
+  const [importOpen, setImportOpen] = useState(false);
+  const clearDataset = useDatasetStore((s) => s.clear);
+  const closeImport = useCallback(() => setImportOpen(false), []);
+
+  // El dataset importado vive en sessionStorage: se rehidrata sólo en el cliente (sin mismatch de SSR).
+  useEffect(() => {
+    void useDatasetStore.persist.rehydrate();
+  }, []);
+
+  const resetToDemo = () => {
+    clearDataset();
+    reset();
+  };
 
   const onLogout = async () => {
     await logout();
@@ -41,12 +59,17 @@ export default function OperationsDashboard() {
             <p className="text-body text-content-muted">Agenda, ausentismo y rendimiento de la clínica en tiempo real.</p>
           </div>
           <div className="flex gap-2">
+            <Link href="/" className="inline-flex h-8 items-center rounded-control px-3 text-caption font-medium text-content-muted hover:bg-surface-muted hover:text-content focus-visible:shadow-focus focus-visible:outline-none">
+              ¿Cómo funciona?
+            </Link>
             <ThemeToggle />
             <Button variant="ghost" size="sm" onClick={() => void onLogout()}>
               <LogOut aria-hidden="true" className="h-4 w-4" /> Salir
             </Button>
           </div>
         </header>
+
+        <DataSourceBanner onImport={() => setImportOpen(true)} onReset={resetToDemo} />
 
         <FilterBar value={filters} doctors={doctors.data ?? []} onChange={update} onReset={reset} />
 
@@ -91,6 +114,11 @@ export default function OperationsDashboard() {
         )}
       </main>
       <AssistantPanel filters={filters} />
+      <ImportDialog
+        open={importOpen}
+        onClose={closeImport}
+        onImported={(range) => update({ from: range.from, to: range.to, doctor: null, status: null })}
+      />
     </div>
   );
 }
