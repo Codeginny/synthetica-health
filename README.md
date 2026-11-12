@@ -33,6 +33,25 @@ Synthetica Health **no es una herramienta para cargar turnos**: es un tablero pa
 
 ![Cómo funciona](docs/case/case-11-como-funciona.png)
 
+## ¿Cómo gano más dinero y reduzco el ausentismo?
+
+El dashboard responde esa pregunta con los números del período filtrado, igual con datos de ejemplo, con un Excel importado o con la API real:
+
+1. **Recomendaciones de negocio** (`buildInsights`, función pura con tests), escritas para el profesional:
+   - **Franja con más ausentismo** (día de semana × mañana/tarde) → pedir seña previa o sobreturnos controlados.
+   - **Hora crítica** (supera en 25% el promedio) → recordatorio por WhatsApp 2 h antes o telemedicina.
+   - **Franja ociosa** (menos turnos promedio por día) → campaña de chequeos preventivos.
+   - **Recordatorios en las especialidades que más facturación pierden**, con el ingreso extra mensual estimado.
+2. **Cada estimación muestra su supuesto** en “¿Cómo lo calculamos?” (por ejemplo, *suponiendo que los recordatorios evitan 3 de cada 10 faltas*).
+3. **Horarios críticos de ausentismo:** barras de turnos + línea de % de faltas por hora (horas críticas resaltadas) y grilla día × franja.
+4. **Facturación perdida por especialidad** en $ ARS: suma del precio de cada turno cancelado (columna `precio`; si falta, tarifa por defecto de $ 30.000).
+
+![Recomendaciones de negocio](docs/case/case-14-recomendaciones.png)
+
+![Horarios críticos y facturación perdida](docs/case/case-15-horarios-perdida.png)
+
+Los datos de ejemplo siguen patrones habituales de consultorio: sólo días hábiles, más faltas a las 8–9 h y los lunes a la mañana, menos a las 18 h, miércoles a la tarde casi vacío y precios distintos por especialidad.
+
 ## ¿Cómo la pruebo?
 
 1. Entrá a la **[demo online](https://client-five-weld-55.vercel.app)** con `demo@synthetica.health` / `demo1234` (ya vienen completos).
@@ -49,6 +68,7 @@ Synthetica Health **no es una herramienta para cargar turnos**: es un tablero pa
 | `hora` | `09:30` | No |
 | `especialidad` | Cardiología | No |
 | `paciente` | Sofía Gómez | No |
+| `precio` | `45000` o `$ 45.000` (también `valor`, `importe`, `arancel`). Si falta: $ 30.000 | No |
 
 Los encabezados pueden ir con o sin acentos (`Médico` también vale como `profesional`). Las filas inválidas se informan con su número y no se importan. Límite: 5 MB / 20.000 turnos. Plantilla: [`client/public/plantilla-turnos.csv`](client/public/plantilla-turnos.csv).
 
@@ -73,11 +93,11 @@ Los encabezados pueden ir con o sin acentos (`Médico` también vale como `profe
 | **GraphQL** | Endpoint `/api/graphql` con schema tipado, enums, inputs y validación; el dashboard consulta por GraphQL | `client/src/server/graphql`, `client/src/features/dashboard/api.ts` |
 | **React Query (TanStack Query)** | Caché, `keepPreviousData`, skeletons, reintentos selectivos, hidratación SSR | `client/src/features/dashboard/queries.ts` |
 | **Zustand** | Estado de UI del asistente con persistencia en `sessionStorage` | `client/src/stores/assistantStore.ts` |
-| **Dashboards / visualización de datos** | KPIs, gráfico de áreas y de barras con Recharts, tabla de turnos | `client/src/components/ui/TrendChart.tsx`, `SpecialtyChart.tsx` |
+| **Dashboards / visualización de datos** | KPIs, áreas, barras, combinado barras + línea, grilla día × franja y recomendaciones de negocio | `client/src/components/ui/*Chart.tsx`, `client/src/features/dashboard/insights.ts` |
 | **Design system / Figma a código** | Tokens + componentes tipados documentados en Storybook | `client/src/components/ui`, `client/.storybook` |
-| **Storybook** | 6 componentes con historias, controles interactivos (args), modo claro/oscuro y addon de accesibilidad | `*.stories.tsx` |
-| **Jest + React Testing Library** | 49 tests unitarios y de integración | `*.test.ts(x)`, `client/jest.config.mjs` |
-| **Playwright (E2E)** | Login → filtro por fechas → datos actualizados; SSR; cookie httpOnly; rango inválido; importación de CSV; página de inicio | `client/e2e` |
+| **Storybook** | 8 componentes con historias, controles interactivos (args), modo claro/oscuro y addon de accesibilidad | `*.stories.tsx` |
+| **Jest + React Testing Library** | 66 tests unitarios y de integración (+ test de la agregación SQL con Vitest en `server/tests`) | `*.test.ts(x)`, `client/jest.config.mjs` |
+| **Playwright (E2E)** | Login → filtro por fechas → datos actualizados; SSR; cookie httpOnly; rango inválido; importación de CSV; recomendaciones de negocio; página de inicio | `client/e2e` |
 | **Accesibilidad (WCAG)** | ARIA, navegación completa por teclado, foco visible, contraste AA medido en ambos temas, `prefers-reduced-motion` | capturas 08 y 10 |
 | **Modo claro / oscuro** | Tokens CSS por tema, sin flash al cargar | `client/src/lib/theme.tsx` |
 | **Seguridad** | JWT en cookie `httpOnly`, BFF, validación Zod, SQL parametrizado, protección de rutas, sin open redirect | `client/src/app/api/session`, `server/` |
@@ -112,7 +132,7 @@ Los encabezados pueden ir con o sin acentos (`Médico` también vale como `profe
 ![Tabla](docs/screenshots/06-zoom-tabla-claro.png)
 
 **Asistente analítico** — respuestas estructuradas (resumen, indicadores y tabla), historial con Zustand
-![Asistente](docs/screenshots/07-zoom-asistente-oscuro.png)
+<img src="docs/screenshots/07-zoom-asistente-oscuro.png" alt="Asistente" width="320" />
 
 **Accesibilidad** — foco visible por teclado y error de validación anunciado con `role="alert"`
 ![Accesibilidad](docs/case/case-07-accesibilidad.png)
@@ -136,11 +156,17 @@ Los encabezados pueden ir con o sin acentos (`Médico` también vale como `profe
 **TanStack Query + filtros sincronizados con la URL**
 ![TanStack Query](docs/case/case-03-react-query-filtros.png)
 
-| SSR con Next.js | GraphQL |
-|---|---|
-| ![SSR](docs/screenshots/14-codigo-ssr-nextjs.png) | ![GraphQL](docs/screenshots/15-codigo-graphql.png) |
-| **Test E2E del SSR** | **Zustand** |
-| ![Test E2E](docs/screenshots/16-codigo-test-e2e.png) | ![Zustand](docs/screenshots/17-codigo-zustand.png) |
+**SSR con Next.js**
+![SSR](docs/screenshots/14-codigo-ssr-nextjs.png)
+
+**GraphQL**
+![GraphQL](docs/screenshots/15-codigo-graphql.png)
+
+**Test E2E del SSR**
+![Test E2E](docs/screenshots/16-codigo-test-e2e.png)
+
+**Zustand**
+![Zustand](docs/screenshots/17-codigo-zustand.png)
 
 ---
 
@@ -223,6 +249,7 @@ npm run build && npm start
 
 # server
 npm run dev
+npm test               # Vitest: agregaciones SQL parametrizadas
 ```
 
 **Cobertura**: Jest mide componentes, hooks, stores, GraphQL y librerías; las rutas de Next, el middleware y la capa de sesión se cubren con Playwright.
@@ -237,26 +264,25 @@ npm run dev
 ## Versión 2.0 — Próximas funcionalidades
 
 **Producto**
-- [ ] Alertas automáticas de pacientes en riesgo de ausentarse (recordatorios por WhatsApp y email).
-- [ ] Analítica predictiva de ausentismo por franja horaria, especialidad y profesional.
-- [ ] Reasignación sugerida de turnos libres para recuperar capacidad ociosa.
-- [ ] Multi-sede y roles (dirección, recepción, profesional) con permisos por vista.
-- [ ] Exportación de reportes a PDF y Excel desde el dashboard.
-- [ ] Mapa de calor de ocupación por día y hora.
+- Alertas automáticas de pacientes en riesgo de ausentarse (recordatorios por WhatsApp y email).
+- Analítica predictiva de ausentismo por paciente, especialidad y profesional.
+- Reasignación sugerida de turnos libres para recuperar capacidad ociosa.
+- Multi-sede y roles (dirección, recepción, profesional) con permisos por vista.
+- Exportación de reportes a PDF y Excel desde el dashboard.
 
 **Frontend**
-- [ ] Streaming SSR con `Suspense` por sección y React Server Components para tablas grandes.
-- [ ] Tabla virtualizada con paginación del lado del servidor, ordenamiento y columnas configurables.
-- [ ] Internacionalización (es / pt / en) y formato regional de moneda y fechas.
-- [ ] PWA con modo offline para recepción.
-- [ ] Biblioteca de componentes publicada como paquete (npm) con versionado semántico.
+- Streaming SSR con `Suspense` por sección y React Server Components para tablas grandes.
+- Tabla virtualizada con paginación del lado del servidor, ordenamiento y columnas configurables.
+- Internacionalización (es / pt / en) y formato regional de moneda y fechas.
+- PWA con modo offline para recepción.
+- Biblioteca de componentes publicada como paquete (npm) con versionado semántico.
 
 **Calidad y plataforma**
-- [ ] Pruebas de regresión visual (Chromatic / Playwright snapshots) y auditoría a11y automatizada en CI.
-- [ ] CI/CD con GitHub Actions: typecheck, Jest, Playwright y build en cada PR.
-- [ ] Deploy en Azure Static Web Apps y monitoreo con Application Insights.
-- [ ] Métricas de Web Vitals (LCP, INP, CLS) y presupuestos de performance.
-- [ ] GraphQL con subscriptions para actualizar el dashboard en tiempo real.
+- Pruebas de regresión visual (Chromatic / Playwright snapshots) y auditoría a11y automatizada en CI.
+- CI/CD con GitHub Actions: typecheck, Jest, Playwright y build en cada PR.
+- Deploy en Azure Static Web Apps y monitoreo con Application Insights.
+- Métricas de Web Vitals (LCP, INP, CLS) y presupuestos de performance.
+- GraphQL con subscriptions para actualizar el dashboard en tiempo real.
 
 ---
 
