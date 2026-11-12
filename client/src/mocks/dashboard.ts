@@ -2,11 +2,12 @@ import type { AppointmentRow, AppointmentStatus, AssistantAnswer, DashboardData,
 import { APPOINTMENT_STATUSES } from '@/types/analytics';
 import { buildDashboard } from '@/features/dashboard/aggregate';
 
+/** Profesional, especialidad y valor de la consulta en $ ARS. */
 const DOCTORS = [
-  ['Dra. Lucía Paz', 'Cardiología'],
-  ['Dr. Martín Sosa', 'Pediatría'],
-  ['Dra. Ana Ruiz', 'Dermatología'],
-  ['Dr. Pablo Díaz', 'Traumatología'],
+  ['Dra. Lucía Paz', 'Cardiología', 45000],
+  ['Dr. Martín Sosa', 'Pediatría', 28000],
+  ['Dra. Ana Ruiz', 'Dermatología', 38000],
+  ['Dr. Pablo Díaz', 'Traumatología', 42000],
 ] as const;
 
 const PATIENTS = ['Sofía Gómez', 'Juan Pérez', 'Carla Méndez', 'Diego López', 'Valeria Torres', 'Tomás Herrera'];
@@ -23,6 +24,19 @@ function mulberry32(seed: number) {
   };
 }
 
+/**
+ * Probabilidad de falta según patrones habituales de consultorio: más ausencias a primera hora
+ * y los lunes a la mañana, menos en el último turno de la tarde.
+ */
+function noShowChance(weekday: number, hour: number, especialidad: string): number {
+  let p = 0.07;
+  if (hour <= 9) p += 0.2;
+  if (weekday === 1 && hour < 13) p += 0.18;
+  if (hour >= 18) p -= 0.05;
+  if (especialidad === 'Dermatología') p += 0.05;
+  return p;
+}
+
 export function generateAppointments(anchor: Date, days = 60, seed = 7): AppointmentRow[] {
   const rand = mulberry32(seed);
   const rows: AppointmentRow[] = [];
@@ -31,19 +45,27 @@ export function generateAppointments(anchor: Date, days = 60, seed = 7): Appoint
     const d = new Date(anchor);
     d.setDate(d.getDate() - i);
     const fecha = d.toISOString().slice(0, 10);
-    const perDay = 4 + Math.floor(rand() * 8);
+    const weekday = new Date(`${fecha}T00:00:00Z`).getUTCDay();
+    if (weekday === 0 || weekday === 6) continue; // sólo días hábiles
+    const perDay = 14 + Math.floor(rand() * 7);
     for (let j = 0; j < perDay; j++) {
-      const [profesional, especialidad] = DOCTORS[Math.floor(rand() * DOCTORS.length)]!;
+      const hour = 8 + Math.floor(rand() * 11);
+      // Miércoles a la tarde la agenda queda casi vacía.
+      if (weekday === 3 && hour >= 13 && rand() < 0.75) continue;
+      const [profesional, especialidad, precio] = DOCTORS[Math.floor(rand() * DOCTORS.length)]!;
       const r = rand();
-      const estado: AppointmentStatus = r < 0.18 ? 'cancelado' : r < 0.3 ? 'pendiente' : r < 0.55 ? 'confirmado' : 'completado';
+      const noShow = noShowChance(weekday, hour, especialidad);
+      const estado: AppointmentStatus =
+        r < noShow ? 'cancelado' : r < noShow + 0.12 ? 'pendiente' : r < noShow + 0.37 ? 'confirmado' : 'completado';
       rows.push({
         id: id++,
         paciente: PATIENTS[Math.floor(rand() * PATIENTS.length)]!,
         profesional,
         especialidad,
         fecha,
-        hora: `${String(8 + Math.floor(rand() * 10)).padStart(2, '0')}:${rand() < 0.5 ? '00' : '30'}`,
+        hora: `${String(hour).padStart(2, '0')}:${rand() < 0.5 ? '00' : '30'}`,
         estado,
+        precio,
       });
     }
   }

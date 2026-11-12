@@ -10,6 +10,7 @@ const COLUMN_ALIASES = {
   fecha: ['fecha', 'fecha_turno', 'dia'],
   hora: ['hora', 'hora_turno', 'horario'],
   estado: ['estado', 'estado_turno', 'status'],
+  precio: ['precio', 'precio_consulta', 'valor', 'importe', 'arancel', 'monto', 'tarifa'],
 } as const;
 
 type Field = keyof typeof COLUMN_ALIASES;
@@ -88,6 +89,18 @@ export function parseStatus(v: unknown): AppointmentStatus | null {
   return typeof v === 'string' ? (STATUS_ALIASES[normalizeKey(v)] ?? null) : null;
 }
 
+/** Precio desde número o texto argentino (`$ 45.000`, `45.000,50`, `45000`). `undefined` si la celda está vacía. */
+export function parsePrice(v: unknown): number | null | undefined {
+  if (v === null || v === undefined || v === '') return undefined;
+  if (typeof v === 'number') return Number.isFinite(v) && v >= 0 ? v : null;
+  let s = String(v).replace(/[$\s]|ARS/gi, '');
+  if (s === '') return undefined;
+  if (s.includes(',')) s = s.replace(/\./g, '').replace(',', '.');
+  else if (/^\d{1,3}(\.\d{3})+$/.test(s)) s = s.replace(/\./g, '');
+  const n = Number(s);
+  return Number.isFinite(n) && n >= 0 ? n : null;
+}
+
 const text = (v: unknown): string => (v === null || v === undefined ? '' : String(v).trim());
 
 /**
@@ -117,11 +130,13 @@ export function normalizeSheet(matrix: unknown[][]): ImportResult {
     const fecha = parseDate(get(r, 'fecha'));
     const hora = parseTime(get(r, 'hora'));
     const estado = parseStatus(get(r, 'estado'));
+    const precio = parsePrice(get(r, 'precio'));
     const problems = [
       !profesional && 'falta el profesional',
       !fecha && `fecha inválida (“${text(get(r, 'fecha'))}”)`,
       !hora && `hora inválida (“${text(get(r, 'hora'))}”)`,
       !estado && `estado desconocido (“${text(get(r, 'estado'))}”)`,
+      precio === null && `precio inválido (“${text(get(r, 'precio'))}”)`,
     ].filter(Boolean);
     if (problems.length || !fecha || !hora || !estado) {
       errors.push({ row: rowNumber, message: problems.join(', ') });
@@ -135,6 +150,7 @@ export function normalizeSheet(matrix: unknown[][]): ImportResult {
       fecha,
       hora,
       estado,
+      ...(precio === undefined || precio === null ? {} : { precio }),
     });
   });
 

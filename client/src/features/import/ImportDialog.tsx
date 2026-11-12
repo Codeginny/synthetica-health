@@ -15,6 +15,7 @@ const COLUMNS = [
   { name: 'hora', example: '09:30', required: false },
   { name: 'especialidad', example: 'Cardiología', required: false },
   { name: 'paciente', example: 'Sofía Gómez', required: false },
+  { name: 'precio', example: '45000 (si falta: $ 30.000)', required: false },
 ];
 
 export interface ImportDialogProps {

@@ -1,7 +1,7 @@
-﻿paciente;profesional;especialidad;fecha;hora;estado
-Sofía Gómez;Dra. Lucía Paz;Cardiología;03/11/2026;09:00;completado
-Juan Pérez;Dra. Lucía Paz;Cardiología;03/11/2026;09:30;cancelado
-Carla Méndez;Dr. Martín Sosa;Pediatría;04/11/2026;10:00;confirmado
-Diego López;Dr. Martín Sosa;Pediatría;04/11/2026;10:30;atendido
-Valeria Torres;Dra. Ana Ruiz;Dermatología;05/11/2026;11:00;pendiente
-Tomás Herrera;Dra. Ana Ruiz;Dermatología;05/11/2026;11:30;ausente
+﻿paciente;profesional;especialidad;fecha;hora;estado;precio
+Sofía Gómez;Dra. Lucía Paz;Cardiología;03/11/2026;09:00;completado;45000
+Juan Pérez;Dra. Lucía Paz;Cardiología;03/11/2026;09:30;cancelado;45000
+Carla Méndez;Dr. Martín Sosa;Pediatría;04/11/2026;10:00;confirmado;28000
+Diego López;Dr. Martín Sosa;Pediatría;04/11/2026;10:30;atendido;28000
+Valeria Torres;Dra. Ana Ruiz;Dermatología;05/11/2026;11:00;pendiente;38000
+Tomás Herrera;Dra. Ana Ruiz;Dermatología;05/11/2026;11:30;ausente;38000

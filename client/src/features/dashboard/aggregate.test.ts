@@ -1,4 +1,4 @@
-import { applyFilters, buildDashboard, CONSULTATION_PRICE } from './aggregate';
+import { applyFilters, buildDashboard, CONSULTATION_PRICE, criticalHours, isoWeekday } from './aggregate';
 import type { AppointmentRow, DashboardFilters } from '@/types/analytics';
 
 const row = (p: Partial<AppointmentRow>): AppointmentRow => ({
@@ -37,10 +37,61 @@ describe('buildDashboard', () => {
   });
 
   it('ordena especialidades por volumen', () => {
-    expect(d.porEspecialidad[0]).toEqual({ especialidad: 'Cardiología', total: 3, cancelados: 1 });
+    expect(d.porEspecialidad[0]).toEqual({ especialidad: 'Cardiología', total: 3, cancelados: 1, perdida: CONSULTATION_PRICE });
+  });
+
+  it('usa el precio del turno y, si falta, la tarifa por defecto', () => {
+    const priced = buildDashboard(
+      [row({ id: 1, precio: 45000 }), row({ id: 2, estado: 'cancelado', precio: 38000 }), row({ id: 3, estado: 'cancelado' })],
+      all,
+    );
+    expect(priced.kpis.ingresos).toBe(45000);
+    expect(priced.kpis.facturacionPerdida).toBe(38000 + CONSULTATION_PRICE);
+    expect(priced.porEspecialidad[0]?.perdida).toBe(38000 + CONSULTATION_PRICE);
+  });
+
+  it('agrupa ausentismo por hora', () => {
+    const h = buildDashboard([row({ id: 1, hora: '08:00', estado: 'cancelado' }), row({ id: 2, hora: '08:30' }), row({ id: 3, hora: '18:00' })], all).porHora;
+    expect(h).toEqual([
+      { hora: 8, total: 2, cancelados: 1, tasa: 50 },
+      { hora: 18, total: 1, cancelados: 0, tasa: 0 },
+    ]);
+  });
+
+  it('agrupa por día de semana × franja con ocupación promedio', () => {
+    // 2026-11-02 y 2026-11-09 son lunes; 2026-11-04, miércoles.
+    const s = buildDashboard(
+      [
+        row({ id: 1, fecha: '2026-11-02', hora: '08:00', estado: 'cancelado' }),
+        row({ id: 2, fecha: '2026-11-09', hora: '12:30' }),
+        row({ id: 3, fecha: '2026-11-09', hora: '09:00' }),
+        row({ id: 4, fecha: '2026-11-04', hora: '13:00' }),
+      ],
+      all,
+    ).porDiaFranja;
+    expect(s).toEqual([
+      { dia: 1, franja: 'mañana', total: 3, cancelados: 1, tasa: 33.3, promedio: 1.5 },
+      { dia: 3, franja: 'tarde', total: 1, cancelados: 0, tasa: 0, promedio: 1 },
+    ]);
   });
 
   it('devuelve ceros sin datos', () => {
     expect(buildDashboard([], all).kpis.tasaAusentismo).toBe(0);
+  });
+});
+
+describe('helpers', () => {
+  it('isoWeekday no depende de la zona horaria', () => {
+    expect(isoWeekday('2026-11-02')).toBe(1);
+    expect(isoWeekday('2026-11-08')).toBe(7);
+  });
+
+  it('criticalHours exige muestra mínima y 25% sobre el promedio', () => {
+    const horas = [
+      { hora: 8, total: 20, cancelados: 6, tasa: 30 },
+      { hora: 9, total: 3, cancelados: 3, tasa: 100 },
+      { hora: 10, total: 20, cancelados: 4, tasa: 20 },
+    ];
+    expect(criticalHours(horas, 20)).toEqual([8]);
   });
 });

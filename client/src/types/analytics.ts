@@ -20,6 +20,8 @@ export interface DashboardKpis {
   /** Porcentaje 0–100. */
   tasaAusentismo: number;
   ingresos: number;
+  /** Suma del precio de los turnos cancelados (faltas). */
+  facturacionPerdida: number;
 }
 
 export interface DailyPoint {
@@ -33,6 +35,32 @@ export interface SpecialtyPoint {
   especialidad: string;
   total: number;
   cancelados: number;
+  /** $ ARS que no se facturaron por faltas. */
+  perdida: number;
+}
+
+export interface HourPoint {
+  /** Hora del día, 0–23. */
+  hora: number;
+  total: number;
+  cancelados: number;
+  /** Porcentaje 0–100. */
+  tasa: number;
+}
+
+export const FRANJAS = ['mañana', 'tarde'] as const;
+export type Franja = (typeof FRANJAS)[number];
+
+export interface DayShiftPoint {
+  /** Día ISO: 1 = lunes … 7 = domingo. */
+  dia: number;
+  franja: Franja;
+  total: number;
+  cancelados: number;
+  /** Porcentaje 0–100. */
+  tasa: number;
+  /** Turnos promedio por día en esa franja (mide la ocupación). */
+  promedio: number;
 }
 
 export interface AppointmentRow {
@@ -43,6 +71,8 @@ export interface AppointmentRow {
   fecha: IsoDate;
   hora: string;
   estado: AppointmentStatus;
+  /** $ ARS; si falta se usa la tarifa por defecto. */
+  precio?: number;
 }
 
 export interface DashboardData {
@@ -50,6 +80,8 @@ export interface DashboardData {
   kpis: DashboardKpis;
   serie: DailyPoint[];
   porEspecialidad: SpecialtyPoint[];
+  porHora: HourPoint[];
+  porDiaFranja: DayShiftPoint[];
   turnos: AppointmentRow[];
 }
 

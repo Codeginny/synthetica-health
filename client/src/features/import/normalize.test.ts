@@ -1,4 +1,4 @@
-import { normalizeSheet, parseDate, parseStatus, parseTime } from './normalize';
+import { normalizeSheet, parseDate, parsePrice, parseStatus, parseTime } from './normalize';
 
 describe('parseDate', () => {
   it.each([
@@ -57,5 +57,28 @@ describe('normalizeSheet', () => {
   it('completa opcionales vacíos', () => {
     const res = normalizeSheet([['profesional', 'fecha', 'estado'], ['Dr. X', '2026-11-01', 'pendiente']]);
     expect(res.rows[0]).toMatchObject({ paciente: 'Sin nombre', especialidad: 'Sin especialidad', hora: '00:00' });
+  });
+});
+
+describe('precio', () => {
+  it('parsePrice acepta números y formato argentino', () => {
+    expect(parsePrice(45000)).toBe(45000);
+    expect(parsePrice('$ 45.000')).toBe(45000);
+    expect(parsePrice('45.000,50')).toBe(45000.5);
+    expect(parsePrice('38000')).toBe(38000);
+    expect(parsePrice('')).toBeUndefined();
+    expect(parsePrice('gratis')).toBeNull();
+  });
+
+  it('la columna precio es opcional: si falta o está vacía, el turno no lleva precio', () => {
+    const res = normalizeSheet([
+      ['profesional', 'fecha', 'estado', 'valor'],
+      ['Dr. X', '2026-11-01', 'cancelado', '$ 42.000'],
+      ['Dr. X', '2026-11-01', 'cancelado', ''],
+      ['Dr. X', '2026-11-01', 'cancelado', 'gratis'],
+    ]);
+    expect(res.rows[0]?.precio).toBe(42000);
+    expect(res.rows[1]).not.toHaveProperty('precio');
+    expect(res.errors).toEqual([{ row: 4, message: 'precio inválido (“gratis”)' }]);
   });
 });
