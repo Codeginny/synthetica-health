@@ -43,7 +43,7 @@ test('login → filtro por rango de fechas → KPIs, gráficos y tabla se actual
   await expect(totalMetric).toHaveText(String(expected.kpis.total));
   await expect(page).toHaveURL(new RegExp(`from=${from}`));
   await expect(page.getByText(`${expected.turnos.length} resultados`)).toBeVisible();
-  await expect(page.getByRole('table').getByRole('row')).toHaveCount(1 + Math.min(15, expected.turnos.length));
+  await expect(page.getByRole('table', { name: /^Turnos filtrados/ }).getByRole('row')).toHaveCount(1 + Math.min(15, expected.turnos.length));
 
   // El filtro sobrevive a un reload y se resuelve en el servidor (estado en la URL).
   await page.reload();
@@ -114,4 +114,19 @@ test('importar la plantilla CSV muestra el dashboard con esos datos', async ({ p
 
   await page.getByRole('button', { name: 'Datos de ejemplo' }).click();
   await expect(page.getByRole('status').filter({ hasText: 'datos de ejemplo' })).toBeVisible();
+});
+
+test('recomendaciones de negocio y gráficos de horarios y facturación perdida', async ({ page }) => {
+  await login(page);
+  const panel = page.getByRole('region', { name: 'Recomendaciones de negocio' });
+  await expect(panel).toBeVisible();
+  await expect(panel.getByTestId('insight-franja')).toContainText('lunes a la mañana');
+  await expect(panel.getByTestId('insight-ociosa')).toContainText('miércoles a la tarde');
+
+  const recordatorios = panel.getByTestId('insight-recordatorios');
+  await recordatorios.getByText('¿Cómo lo calculamos?').click();
+  await expect(recordatorios).toContainText('evitan 3 de cada 10 faltas');
+
+  await expect(page.getByRole('region', { name: 'Horarios críticos de ausentismo' }).getByRole('table')).toBeVisible();
+  await expect(page.getByRole('region', { name: 'Facturación perdida por especialidad' })).toContainText('en el período');
 });

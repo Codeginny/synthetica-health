@@ -5,9 +5,11 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { CalendarCheck, CalendarClock, CircleDollarSign, LogOut, UserX } from 'lucide-react';
 import {
+  AbsenteeismHoursChart,
   AppointmentsTable,
   ErrorState,
   FilterBar,
+  LostRevenueChart,
   MetricCard,
   SpecialtyChart,
   TrendChart,
@@ -20,6 +22,7 @@ import { logout } from '@/features/auth/api';
 import { ImportDialog } from '@/features/import/ImportDialog';
 import { DataSourceBanner } from '@/features/import/DataSourceBanner';
 import { useDatasetStore } from '@/stores/datasetStore';
+import { BusinessInsights } from './BusinessInsights';
 import { ThemeToggle } from './ThemeToggle';
 import { useDashboardData, useDoctors } from './queries';
 
@@ -97,7 +100,7 @@ export default function OperationsDashboard() {
               <MetricCard
                 label="Ingresos estimados"
                 value={formatCurrency(kpis?.ingresos ?? 0, true)}
-                hint="Confirmados + completados"
+                hint={`${formatCurrency(kpis?.facturacionPerdida ?? 0, true)} perdidos por faltas`}
                 tone="neutral"
                 icon={<CircleDollarSign className="h-5 w-5" />}
                 loading={loading}
@@ -107,6 +110,18 @@ export default function OperationsDashboard() {
             <div className="grid gap-gutter lg:grid-cols-2">
               <TrendChart data={data?.serie ?? []} loading={loading} />
               <SpecialtyChart data={data?.porEspecialidad ?? []} loading={loading} />
+            </div>
+
+            <BusinessInsights data={data} loading={loading} />
+
+            <div className="grid gap-gutter lg:grid-cols-2">
+              <AbsenteeismHoursChart
+                porHora={data?.porHora ?? []}
+                porDiaFranja={data?.porDiaFranja ?? []}
+                promedio={kpis?.tasaAusentismo ?? 0}
+                loading={loading}
+              />
+              <LostRevenueChart data={data?.porEspecialidad ?? []} loading={loading} />
             </div>
 
             <AppointmentsTable rows={data?.turnos ?? []} loading={loading} />
