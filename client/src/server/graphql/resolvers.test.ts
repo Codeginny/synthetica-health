@@ -25,6 +25,31 @@ describe('GraphQL schema', () => {
     expect(d.turnos.every((t) => t.estado === 'cancelado')).toBe(true);
   });
 
+  it('expone las agregaciones de negocio: pérdida, horas y franjas', async () => {
+    const res = await run(
+      `query($f: DashboardFiltersInput!) { dashboard(filters: $f) {
+        kpis { facturacionPerdida }
+        porEspecialidad { especialidad perdida }
+        porHora { hora tasa }
+        porDiaFranja { dia franja promedio }
+        turnos(limit: 1) { precio }
+      } }`,
+      { f: { from: '2026-10-12', to: '2026-11-10' } },
+    );
+    expect(res.errors).toBeUndefined();
+    const d = res.data?.['dashboard'] as {
+      kpis: { facturacionPerdida: number };
+      porEspecialidad: { perdida: number }[];
+      porHora: { hora: number }[];
+      porDiaFranja: { dia: number; franja: string }[];
+      turnos: { precio: number }[];
+    };
+    expect(d.kpis.facturacionPerdida).toBe(d.porEspecialidad.reduce((acc, e) => acc + e.perdida, 0));
+    expect(d.porHora[0]?.hora).toBe(8);
+    expect(d.porDiaFranja.every((s) => s.dia <= 5 && ['mañana', 'tarde'].includes(s.franja))).toBe(true);
+    expect(d.turnos[0]?.precio).toBeGreaterThan(0);
+  });
+
   it('rechaza estados fuera del enum', async () => {
     const res = await run(`{ dashboard(filters: { from: "2026-11-01", to: "2026-11-10", status: borrado }) { kpis { total } } }`);
     expect(res.errors?.[0]?.message).toMatch(/borrado/);

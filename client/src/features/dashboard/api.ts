@@ -5,10 +5,12 @@ import type { AssistantAnswer, DashboardData, DashboardFilters } from '@/types/a
 const DASHBOARD_QUERY = /* GraphQL */ `
   query Dashboard($filters: DashboardFiltersInput!) {
     dashboard(filters: $filters) {
-      kpis { total pendientes confirmados completados cancelados tasaAusentismo ingresos }
+      kpis { total pendientes confirmados completados cancelados tasaAusentismo ingresos facturacionPerdida }
       serie { fecha total completados cancelados }
-      porEspecialidad { especialidad total cancelados }
-      turnos { id paciente profesional especialidad fecha hora estado }
+      porEspecialidad { especialidad total cancelados perdida }
+      porHora { hora total cancelados tasa }
+      porDiaFranja { dia franja total cancelados tasa promedio }
+      turnos { id paciente profesional especialidad fecha hora estado precio }
     }
   }
 `;

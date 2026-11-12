@@ -24,6 +24,7 @@ export const typeDefs = /* GraphQL */ `
     cancelados: Int!
     tasaAusentismo: Float!
     ingresos: Float!
+    facturacionPerdida: Float!
   }
 
   type DailyPoint {
@@ -37,6 +38,25 @@ export const typeDefs = /* GraphQL */ `
     especialidad: String!
     total: Int!
     cancelados: Int!
+    perdida: Float!
+  }
+
+  type HourPoint {
+    hora: Int!
+    total: Int!
+    cancelados: Int!
+    tasa: Float!
+  }
+
+  "franja: mañana (antes de las 13 h) o tarde"
+  type DayShiftPoint {
+    "1 = lunes … 7 = domingo"
+    dia: Int!
+    franja: String!
+    total: Int!
+    cancelados: Int!
+    tasa: Float!
+    promedio: Float!
   }
 
   type Appointment {
@@ -47,12 +67,15 @@ export const typeDefs = /* GraphQL */ `
     fecha: String!
     hora: String!
     estado: AppointmentStatus!
+    precio: Float
   }
 
   type Dashboard {
     kpis: DashboardKpis!
     serie: [DailyPoint!]!
     porEspecialidad: [SpecialtyPoint!]!
+    porHora: [HourPoint!]!
+    porDiaFranja: [DayShiftPoint!]!
     turnos(limit: Int = 200): [Appointment!]!
   }
 
